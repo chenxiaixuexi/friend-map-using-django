@@ -1,0 +1,1381 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <meta http-equiv="cleartype" content="on">
+    <meta name="MobileOptimized" content="320">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="../static/css/test.css">
+    <link rel="stylesheet" href="../static/css/index.css">
+    <title>地图显示</title>
+    <style>
+        html,
+        body,
+        #container {
+            width: 100%;
+            height: 100%;
+            font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+        
+        div.title-display {
+            position: relative;
+            width: auto;
+            padding: 0;
+            z-index: 1;
+        }
+        
+        div.title-display div {
+            color: #333333;
+            font-size: 10px;
+        }
+        
+        .content-window-card {
+            position: relative;
+            box-shadow: none;
+            bottom: 0;
+            left: 0;
+            width: auto;
+            padding: 0;
+        }
+        
+        .content-window-card p {
+            height: 2rem;
+        }
+        
+        .custom-info {
+            border: solid 1px silver;
+        }
+        
+        div.info-top {
+            position: relative;
+            background: none repeat scroll 0 0 #F9F9F9;
+            border-bottom: 1px solid #CCC;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        div.info-top div {
+            display: inline-block;
+            color: #333333;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 31px;
+            padding: 0 10px;
+        }
+        
+        div.info-top img {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transition-duration: 0.25s;
+        }
+        
+        div.info-top img:hover {
+            box-shadow: 0px 0px 5px #000;
+        }
+        
+        div.info-middle {
+            font-size: 12px;
+            padding: 10px 6px;
+            line-height: 20px;
+        }
+        
+        div.info-bottom {
+            height: 0px;
+            width: 100%;
+            clear: both;
+            text-align: center;
+        }
+        
+        div.info-bottom img {
+            position: relative;
+            z-index: 104;
+        }
+        
+        span {
+            margin-left: 5px;
+            font-size: 11px;
+        }
+        
+        .info-middle img {
+            float: left;
+            margin-right: 6px;
+        }
+        
+        #map-styles .input-item {
+            height: 2rem;
+        }
+        
+        #map-styles .input-item span {
+            display: inline-block;
+            width: 4rem;
+        }
+        
+        #map-styles .input-item .input-text {
+            color: #0288d1;
+            margin-left: 1rem;
+            margin-right: 0rem;
+            width: 6rem;
+        }
+        
+        #floating-panel {
+            position: absolute;
+            top: 10px;
+            left: 80%;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+            text-align: center;
+            font-family: 'Roboto', 'sans-serif';
+            line-height: 30px;
+            padding-left: 10px;
+        }
+        
+        .slideout-menu {
+            left: auto;
+        }
+        
+        .btn-hamburger {
+            left: auto;
+            right: 12px;
+            z-index: 10;
+        }
+        
+        .box {
+            height: 1500px;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <link href="https://cdn.bootcdn.net/ajax/libs/limonte-sweetalert2/8.11.8/sweetalert2.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav id="menu" class="menu">
+
+        <section class="menu-section">
+
+            <div class="btn-group">
+                <button id="add"> &nbsp; &nbsp; ADD  Friend &nbsp;</button>
+                <button id="delete">DELETE Friend</button>
+                <button id="edit"> &nbsp; &nbsp; EDIT  Friend &nbsp;</button>
+            </div>
+            <div class="choose">
+                <select id="options">
+              <option value="city">city</option>
+              <option value="name">name</option>
+              <option value="phone">phone</option>
+              <option value="mail">mail</option>
+            </select>
+                <input id="inputvalues" />
+            </div>
+            <div class="seabut">
+                <button id="search">SEARCH Friend</button>
+            </div>
+        </section>
+
+
+    </nav>
+    <main id="panel" class="panel">
+        <button class="btn-hamburger js-slideout-toggle"></button>
+    </main>
+    <script src="../static/js/md5.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/limonte-sweetalert2/8.11.8/sweetalert2.min.js"></script>
+    <script src="../static/js/jQuery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.4.1/core.js"></script>
+    <!--<script src="https://cache.amap.com/lbs/static/es5.min.js"></script>-->
+    <script src="../static/js/es5.min.js"></script>
+    <!--<script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>-->
+    <scipt src="../static/js/demoutils.js"></scipt>
+    <!--<script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=589ea3372ca2433f0732f684c5343004&plugin=AMap.Geocoder"></script>-->
+    <script type="text/javascript" src="../static/js/geoencoder.js"></script>
+    <script type="text/javascript">
+        window.onload = function() {
+            var slideout = new Slideout({
+                'panel': document.getElementById('panel'),
+                'menu': document.getElementById('menu'),
+                'side': 'right'
+            });
+
+            document.querySelector('.js-slideout-toggle').addEventListener('click', function() {
+                slideout.toggle();
+            });
+
+            document.querySelector('.menu').addEventListener('click', function(eve) {
+                if (eve.target.nodeName === 'A') {
+                    slideout.close();
+                }
+            });
+        };
+        marklist = [];
+        var infoWindow = new AMap.InfoWindow({
+            isCustom: true,
+            offset: new AMap.Pixel(16, -45)
+        });
+        let json;
+        var markers_w = [];
+
+        //地图初始化时，在地图上添加一个marker标记,鼠标点击marker可弹出自定义的信息窗体
+        var map = new AMap.Map("panel", {
+            resizeEnable: true,
+            center: [116.481181, 39.989792],
+            zoom: 8,
+            mapStyle: "amap://styles/whitesmoke",
+            lang: "zh_en",
+            showLabel: false,
+        });
+        //show the friends locations
+        var init = function() {
+            $.ajax({
+                type: "GET",
+                url: "http://172.27.4.64:8000/show", //这里保证不发生跨域请求保持一致改地址就好，
+                dataType: "json", //172.20.10.2 连接热点的地址
+                async: true,
+                success: function(result) {
+                    console.log(result["list"]),
+                        displayMarker(result),
+                        Swal.fire('Good job!',
+                            'You clicked the button!',
+                            'success')
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+        };
+        init();
+
+        function displayMarker(result) {
+            var t = result["list"];
+            for (var i = 0; i < t.length; i++) {
+                var address = t[i]["cncity"];
+                var title = t[i]["name"];
+                var content = [];
+                content.push("e-mail : " + t[i]["mail"]);
+                content.push("Phone : " + t[i]["phone"]);
+                content.push("Address : " + t[i]["addr"]);
+                geo(address, title, content);
+            }
+
+        }
+
+        //添加marker标记
+        function addMarker(coords, title, content) {
+            //绑定点击事件
+            var marker = new AMap.Marker({
+                map: map,
+                position: [coords[0], coords[1]]
+            });
+
+            //鼠标点击marker弹出自定义的信息窗体
+            marker.content = createInfoWindow(title, content.join("<br/>"));
+            marker.on('click', markerClick);
+        }
+
+        function markerClick(e) {
+            infoWindow.setContent(e.target.content);
+            infoWindow.open(map, e.target.getPosition());
+        }
+
+        //构建自定义信息窗体
+        function createInfoWindow(title, content) {
+            var info = document.createElement("div");
+            //info.className = "custom-info input-card content-window-card";
+            info.className = "content-window-card";
+            //可以通过下面的方式修改自定义窗体的宽高
+            //info.style.width = "400px";
+            // 定义顶部标题
+            var top = document.createElement("div");
+            var titleD = document.createElement("div");
+            var closeX = document.createElement("img");
+            top.className = "info-top";
+            titleD.innerHTML = title;
+            closeX.src = "https://webapi.amap.com/images/close2.gif";
+            closeX.onclick = closeInfoWindow;
+
+            top.appendChild(titleD);
+            top.appendChild(closeX);
+            info.appendChild(top);
+
+            // 定义中部内容
+            var middle = document.createElement("div");
+            middle.className = "info-middle";
+            middle.style.backgroundColor = 'white';
+            middle.innerHTML = content;
+            info.appendChild(middle);
+
+            // 定义底部内容
+            var bottom = document.createElement("div");
+            bottom.className = "info-bottom";
+            bottom.style.position = 'relative';
+            bottom.style.top = '0px';
+            bottom.style.margin = '0 auto';
+            info.appendChild(bottom);
+            return info;
+        }
+
+        //关闭信息窗体
+        function closeInfoWindow() {
+            map.clearInfoWindow();
+        }
+        //保存
+        lnglat = [];
+        //地理编码
+        var geocoder = new AMap.Geocoder({
+            city: "全国",
+        });
+
+        //用来地理编码显示位置的
+        function geo(address, name, content) {
+            geocoder.getLocation(address, function(status, result) {
+                if (status === 'complete' && result.geocodes.length) {
+                    lnglat = result.geocodes[0].location;
+                    var marker = new AMap.Marker({
+                        map: map,
+                        position: lnglat
+                    });
+                    marker.content = createInfoWindow(name, content.join("<br/>"));
+                    marker.on('click', markerClick);
+                    markers_w.push(marker);
+                }
+            });
+        }
+        var butt = document.getElementById("add");
+        butt.addEventListener("click", addFriend, false);
+
+        var appid = '20200523000467538';
+        var key = '4Cfz6WLsKyAi0nQEKp17';
+
+        // 多个query可以用\n连接  如 query='apple\norange\nbanana\npear'
+        var from = 'en';
+        var to = 'zh';
+
+        function addFriend() {
+            Swal.fire({
+                title: 'Input the friend information',
+                html: 'NAME:e.g. Zhang san' + '<input id="name" class="swal2-input">' +
+                    'PHONE:e.g. 13584848177' + '<input id="phone" class="swal2-input">' +
+                    'CITY:e.g. HuNan Province Changsha' + '<input id="city" class="swal2-input">' +
+                    'ADDR: e.g. xxxroad' + '<input id="address" class="swal2-input">' +
+                    'MAIL: e.g. xxx@163.com' + '<input id="mail" class="swal2-input" >',
+                preConfirm: function() {
+                    return new Promise(function(resolve) {
+                        resolve([
+                            $('#name').val(),
+                            $('#phone').val(),
+                            $('#city').val(),
+                            $('#address').val(),
+                            $('#mail').val()
+                        ]);
+                    });
+                },
+                onOpen: function() {
+                    $('#name').focus();
+                },
+                showCancelButton: true,
+            }).then(function(result) {
+                var data_ = {};
+                result = result["value"];
+                data_["name"] = result[0];
+                data_["phone"] = result[1];
+                data_["city"] = result[2];
+                data_["addr"] = result[3];
+                data_["mail"] = result[4];
+                var geoloc;
+                console.log(data_);
+                var query = data_["city"]
+                var salt = (new Date).getTime();
+                var str1 = appid + query + salt + key;
+                var sign = MD5(str1);
+                $.ajax({
+                    url: 'http://api.fanyi.baidu.com/api/trans/vip/translate',
+                    type: 'get',
+                    dataType: 'jsonp',
+                    async: false,
+                    data: {
+                        q: query,
+                        appid: appid,
+                        salt: salt,
+                        from: from,
+                        to: to,
+                        sign: sign
+                    },
+                    success: function(data) {
+                        console.log(data);
+                        var city = data["trans_result"][0]["dst"];
+                        geoloc = city;
+                        console.log(geoloc);
+                        data_["cncity"] = city;
+                        add(data_, geoloc);
+                    }
+                });
+            }).catch(swal.noop);
+        }
+
+        function add(data_, geoloc) {
+            $.ajax({
+                type: "GET",
+                url: "http://172.27.4.64:8000/add",
+                dataType: "json",
+                data: data_,
+                async: false,
+                success: function(result) {
+                    if (result["error_num"] == 0) {
+                        var address = geoloc;
+                        var title = data_["name"];
+                        var content = [];
+                        content.push("e-mail : " + data_["mail"]);
+                        content.push("Phone : " + data_["phone"]);
+                        content.push("Address : " + data_["addr"]);
+                        geo(address, title, content);
+                        Swal.fire('Good job!',
+                            'You have added a friend!',
+                            'success');
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+        }
+
+        var butt_edit = document.getElementById("edit");
+        butt_edit.addEventListener("click", editFriend, false);
+
+        function editFriend() {
+            var data = [];
+            $.ajax({
+                type: "GET",
+                url: "http://172.27.4.64:8000/show",
+                dataType: "json",
+                async: false,
+                success: function(result) {
+                    console.log(result["list"]);
+                    data = result["list"];
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+            console.log(data);
+            var mapto = new Map();
+            for (var a = 0; a < data.length; a++) {
+                mapto.set((a + 1), data[a]["name"]);
+            }
+            console.log(mapto);
+            Swal.fire({
+                title: 'Please chooes friend you want to edit',
+                input: 'select',
+                inputOptions: mapto,
+                inputPlaceholder: 'please choose person',
+                showCancelButton: true,
+            }).then((result) => {
+                console.log(result)
+                if (result.value) {
+                    var listl = data[result.value - 1];
+                    console.log(result);
+                    Swal.mixin({
+                        input: 'text',
+                        confirmButtonText: 'Next &rarr;',
+                        showCancelButton: true,
+                        progressSteps: ['1', '2', '3', '4', '5']
+                    }).queue([{
+                        title: 'name',
+                        inputValue: listl["name"],
+                    }, {
+                        title: 'phone',
+                        inputValue: listl["phone"]
+                    }, {
+                        title: 'city',
+                        inputValue: listl["city"]
+                    }, {
+                        title: 'address',
+                        inputValue: listl["addr"]
+                    }, {
+                        title: 'e-mail',
+                        inputValue: listl["mail"]
+                    }]).then((result) => {
+                        if (result.value) {
+                            const answers = result.value;
+                            if (answers[0] != "") {
+                                console.log(answers[0])
+                                listl["name"] = answers[0]
+                            }
+                            if (answers[1] != "") {
+                                listl["phone"] = answers[1]
+                            }
+                            if (answers[2] != "") {
+                                listl["city"] = answers[2]
+                            }
+                            if (answers[3] != "") {
+                                listl["addr"] = answers[3]
+                            }
+                            if (answers[4] != "") {
+                                listl["mail"] = answers[4]
+                            }
+                            listl["ID"] = listl["id"];
+                            console.log(listl);
+                            postRequest(listl);
+                        }
+                    });
+                }
+
+            })
+        }
+
+        function postRequest(data0) {
+            var query = data0["city"]
+            var salt = (new Date).getTime();
+            var str1 = appid + query + salt + key;
+            var sign = MD5(str1);
+            $.ajax({
+                url: 'http://api.fanyi.baidu.com/api/trans/vip/translate',
+                type: 'get',
+                dataType: 'jsonp',
+                async: false,
+                data: {
+                    q: query,
+                    appid: appid,
+                    salt: salt,
+                    from: from,
+                    to: to,
+                    sign: sign
+                },
+                success: function(data) {
+                    console.log(data);
+                    var city = data["trans_result"][0]["dst"];
+                    data0["cncity"] = city;
+                    $.ajax({
+                        type: "POST",
+                        url: "http://172.27.4.64:8000/edit",
+                        dataType: "json",
+                        data: JSON.stringify(data0),
+                        async: true,
+                        success: function() {
+                            var address = data0["cncity"];
+                            var title = data0["name"];
+                            var content = [];
+                            content.push("e-mail : " + data0["mail"]);
+                            content.push("Phone : " + data0["phone"]);
+                            content.push("Address : " + data0["addr"]);
+                            geo(address, title, content);
+                            Swal.fire('Good job!',
+                                'You have changed information!',
+                                'success');
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            alert(XMLHttpRequest.status)
+                            alert(XMLHttpRequest.readyState)
+                            alert(textStatus)
+                        }
+                    });
+                }
+            });
+
+
+        }
+
+        var search_butt = document.getElementById("search");
+        search_butt.addEventListener("click", searchFriend, false);
+
+        function searchFriend() {
+            var option = document.getElementById('options').value;
+            var content = document.getElementById("inputvalues").value;
+            var data = {};
+            data["area"] = option;
+            data["search"] = content;
+
+            $.ajax({
+                type: "GET",
+                url: "http://172.27.4.64:8000/search",
+                dataType: "json",
+                async: true,
+                data: data,
+                success: function(result) {
+                    var finddata = result;
+                    console.log(result["list"]);
+                    if (result["list"].length != 0) {
+                        var names = "";
+                        for (var s = 0; s < result["list"].length; s++) {
+                            names = names + result["list"][s]["name"] + " ";
+                        }
+                        Swal.fire(
+                            'Do you want to display on map?',
+                            'find: ' + names,
+                            'question'
+
+                        ).then((result) => {
+                            if (result.value) {
+                                map.remove(markers_w);
+                                displayMarker(finddata);
+                            }
+                        })
+                    } else {
+                        Swal.fire(
+                            'find nothing',
+                            'Please try again!',
+                            'error'
+                        )
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+        }
+
+        var dele_butt = document.getElementById("delete");
+        dele_butt.addEventListener("click", deleteFriend, false);
+
+        function deleteFriend() {
+            var data = [];
+            $.ajax({
+                type: "GET",
+                url: "http://172.27.4.64:8000/show",
+                dataType: "json",
+                async: false,
+                success: function(result) {
+                    console.log(result["list"]);
+                    data = result["list"];
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+            console.log(data);
+            var mapto = new Map();
+            for (var a = 0; a < data.length; a++) {
+                mapto.set((a + 1), data[a]["name"]);
+            }
+            console.log(mapto);
+            Swal.fire({
+                title: 'please chooes friend you want to delete',
+                input: 'select',
+                inputOptions: mapto,
+                inputPlaceholder: 'please choose person',
+                showCancelButton: true,
+            }).then((result) => {
+                console.log(result)
+                var index = new Number(result["value"]);
+                var senddata = {};
+                senddata["ID"] = data[index - 1]["id"];
+                const swalWithBootstrapButtons = Swal.mixin({
+                    customClass: {
+                        confirmButton: 'btn btn-success',
+                        cancelButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false
+                });
+
+                swalWithBootstrapButtons.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'No, cancel!',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.value) {
+                        deleInterface(senddata)
+                    } else if (
+                        /* Read more about handling dismissals below */
+                        result.dismiss === Swal.DismissReason.cancel
+                    ) {
+                        swalWithBootstrapButtons.fire(
+                            'Cancelled',
+                            'Your imaginary file is safe :)',
+                            'error'
+                        )
+                    }
+                })
+            });
+
+
+        }
+
+        function deleInterface(data) {
+            $.ajax({
+                type: "GET",
+                url: "http://172.27.4.64:8000/delete",
+                dataType: "json",
+                async: false,
+                data: data,
+                success: function(result) {
+                    Swal.fire('OK!', 'you have deleted successfully', 'success');
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+        }
+    </script>
+    <script src="../static/js/slideout.js"></script>
+</body>
+
+</html>
+
+<!--<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>地图显示</title>
+    <style>
+        html,
+        body,
+        #container {
+            width: 100%;
+            height: 100%;
+            font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+        
+        div.title-display {
+            position: relative;
+            width: auto;
+            padding: 0;
+            z-index: 1;
+        }
+        
+        div.title-display div {
+            color: #333333;
+            font-size: 10px;
+        }
+        
+        .content-window-card {
+            position: relative;
+            box-shadow: none;
+            bottom: 0;
+            left: 0;
+            width: auto;
+            padding: 0;
+        }
+        
+        .content-window-card p {
+            height: 2rem;
+        }
+        
+        .custom-info {
+            border: solid 1px silver;
+        }
+        
+        div.info-top {
+            position: relative;
+            background: none repeat scroll 0 0 #F9F9F9;
+            border-bottom: 1px solid #CCC;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        div.info-top div {
+            display: inline-block;
+            color: #333333;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 31px;
+            padding: 0 10px;
+        }
+        
+        div.info-top img {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transition-duration: 0.25s;
+        }
+        
+        div.info-top img:hover {
+            box-shadow: 0px 0px 5px #000;
+        }
+        
+        div.info-middle {
+            font-size: 12px;
+            padding: 10px 6px;
+            line-height: 20px;
+        }
+        
+        div.info-bottom {
+            height: 0px;
+            width: 100%;
+            clear: both;
+            text-align: center;
+        }
+        
+        div.info-bottom img {
+            position: relative;
+            z-index: 104;
+        }
+        
+        span {
+            margin-left: 5px;
+            font-size: 11px;
+        }
+        
+        .info-middle img {
+            float: left;
+            margin-right: 6px;
+        }
+        
+        #map-styles .input-item {
+            height: 2rem;
+        }
+        
+        #map-styles .input-item span {
+            display: inline-block;
+            width: 4rem;
+        }
+        
+        #map-styles .input-item .input-text {
+            color: #0288d1;
+            margin-left: 1rem;
+            margin-right: 0rem;
+            width: 6rem;
+        }
+        
+        #floating-panel {
+            position: absolute;
+            top: 10px;
+            left: 80%;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+            text-align: center;
+            font-family: 'Roboto', 'sans-serif';
+            line-height: 30px;
+            padding-left: 10px;
+        }
+        
+        #edit,
+        #delete,
+        #add {
+            float: left;
+            position: relative;
+            left: 0;
+            top: 0;
+            font-size: 30px;
+            width: auto;
+        }
+        
+        #searchbar {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 2px solid #999;
+            text-align: center;
+            font-family: 'Roboto', 'sans-serif';
+            line-height: 40px;
+            padding-left: 10px;
+            float: left;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <link href="https://cdn.bootcdn.net/ajax/libs/limonte-sweetalert2/8.11.8/sweetalert2.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="floating-panel">
+        <input id="add" type="button" value="add" />
+        <input id="edit" type="button" value="edit" />
+        <input id="delete" type="button" value="delete" />
+    </div>
+    <div id="searchbar">
+        <select id="options">
+            <option value="city">city</option>
+            <option value="name">name</option>
+            <option value="phone">phone</option>
+            <option value="mail">mail</option>
+        </select>
+        <input id="search" type="text" />
+        <input id="searchbutt" type="button" value="search" />
+    </div>
+
+    <div id="container"></div>
+    <script src="https://cdn.bootcdn.net/ajax/libs/limonte-sweetalert2/8.11.8/sweetalert2.min.js"></script>
+    <script src="../static/js/jQuery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.4.1/core.js"></script>
+    <script src="https://cache.amap.com/lbs/static/es5.min.js"></script>
+    <script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=589ea3372ca2433f0732f684c5343004&plugin=AMap.Geocoder"></script>
+    <script type="text/javascript">
+        marklist = [];
+        var infoWindow = new AMap.InfoWindow({
+            isCustom: true,
+            offset: new AMap.Pixel(16, -45)
+        });
+        let json;
+        var markers_w = [];
+
+        //地图初始化时，在地图上添加一个marker标记,鼠标点击marker可弹出自定义的信息窗体
+        var map = new AMap.Map("container", {
+            resizeEnable: true,
+            center: [116.481181, 39.989792],
+            zoom: 8,
+            mapStyle: "amap://styles/whitesmoke",
+            lang: "zh_en",
+            showLabel: false,
+        });
+        //show the friends locations
+        var init = function() {
+            $.ajax({
+                type: "GET",
+                url: "http://127.0.0.1:8000/show", //这里保证不发生跨域请求保持一致改地址就好，
+                dataType: "json", //172.20.10.2 连接热点的地址
+                async: true,
+                success: function(result) {
+                    console.log(result["list"]),
+                        displayMarker(result),
+                        Swal.fire('Good job!',
+                            'You clicked the button!',
+                            'success')
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+        };
+        init();
+
+        function displayMarker(result) {
+            var t = result["list"];
+            for (var i = 0; i < t.length; i++) {
+                var address = t[i]["city"];
+                var title = t[i]["name"];
+                var content = [];
+                content.push("e-mail : " + t[i]["mail"]);
+                content.push("Phone : " + t[i]["phone"]);
+                content.push("Address : " + t[i]["addr"]);
+                geo(address, title, content);
+            }
+        }
+
+        //添加marker标记
+        function addMarker(coords, title, content) {
+            //绑定点击事件
+            var marker = new AMap.Marker({
+                map: map,
+                position: [coords[0], coords[1]]
+            });
+
+            //鼠标点击marker弹出自定义的信息窗体
+            marker.content = createInfoWindow(title, content.join("<br/>"));
+            marker.on('click', markerClick);
+        }
+
+        function markerClick(e) {
+            infoWindow.setContent(e.target.content);
+            infoWindow.open(map, e.target.getPosition());
+        }
+
+        //构建自定义信息窗体
+        function createInfoWindow(title, content) {
+            var info = document.createElement("div");
+            //info.className = "custom-info input-card content-window-card";
+            info.className = "content-window-card";
+            //可以通过下面的方式修改自定义窗体的宽高
+            //info.style.width = "400px";
+            // 定义顶部标题
+            var top = document.createElement("div");
+            var titleD = document.createElement("div");
+            var closeX = document.createElement("img");
+            top.className = "info-top";
+            titleD.innerHTML = title;
+            closeX.src = "https://webapi.amap.com/images/close2.gif";
+            closeX.onclick = closeInfoWindow;
+
+            top.appendChild(titleD);
+            top.appendChild(closeX);
+            info.appendChild(top);
+
+            // 定义中部内容
+            var middle = document.createElement("div");
+            middle.className = "info-middle";
+            middle.style.backgroundColor = 'white';
+            middle.innerHTML = content;
+            info.appendChild(middle);
+
+            // 定义底部内容
+            var bottom = document.createElement("div");
+            bottom.className = "info-bottom";
+            bottom.style.position = 'relative';
+            bottom.style.top = '0px';
+            bottom.style.margin = '0 auto';
+            info.appendChild(bottom);
+            return info;
+        }
+
+        //关闭信息窗体
+        function closeInfoWindow() {
+            map.clearInfoWindow();
+        }
+        //保存
+        lnglat = [];
+        //地理编码
+        var geocoder = new AMap.Geocoder({
+            city: "全国",
+        });
+
+        //用来地理编码显示位置的
+        function geo(address, name, content) {
+            geocoder.getLocation(address, function(status, result) {
+                if (status === 'complete' && result.geocodes.length) {
+                    lnglat = result.geocodes[0].location;
+                    var marker = new AMap.Marker({
+                        map: map,
+                        position: lnglat
+                    });
+                    marker.content = createInfoWindow(name, content.join("<br/>"));
+                    marker.on('click', markerClick);
+                    markers_w.push(marker);
+                }
+            });
+        }
+        var butt = document.getElementById("add");
+        butt.addEventListener("click", addFriend, false);
+
+        function addFriend() {
+            Swal.fire({
+                title: 'Input the friend information',
+                html: '<input id="name" class="swal2-input" value="chenxi">' +
+                    '<input id="phone" class="swal2-input" value="18531826058">' +
+                    '<input id="city" class="swal2-input" value="河北省廊坊市">' +
+                    '<input id="address" class="swal2-input" value="廊坊安次">' +
+                    '<input id="mail" class="swal2-input" value="15433@163.com">',
+                preConfirm: function() {
+                    return new Promise(function(resolve) {
+                        resolve([
+                            $('#name').val(),
+                            $('#phone').val(),
+                            $('#city').val(),
+                            $('#address').val(),
+                            $('#mail').val()
+                        ]);
+                    });
+                },
+                onOpen: function() {
+                    $('#name').focus();
+                    $('#phone').focus();
+                },
+                showCancelButton: true,
+            }).then(function(result) {
+                var data = {};
+                result = result["value"];
+                data["name"] = result[0];
+                data["phone"] = result[1];
+                data["city"] = result[2];
+                data["addr"] = result[3];
+                data["mail"] = result[4];
+                console.log(data);
+                console.log(result);
+                $.ajax({
+                    type: "GET",
+                    url: "http://127.0.0.1:8000/add",
+                    dataType: "json",
+                    data: data,
+                    async: false,
+                    success: function(result) {
+                        if (result["error_num"] == 0) {
+                            var address = data["city"];
+                            var title = data["name"];
+                            var content = [];
+                            content.push("e-mail : " + data["mail"]);
+                            content.push("Phone : " + data["phone"]);
+                            content.push("Address : " + data["addr"]);
+                            geo(address, title, content);
+                            console.log("ok");
+                            Swal.fire('Good job!',
+                                'You have added a friend!',
+                                'success');
+                        }
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        alert(XMLHttpRequest.status)
+                        alert(XMLHttpRequest.readyState)
+                        alert(textStatus)
+                    }
+                });
+            }).catch(swal.noop);
+        }
+
+        var butt_edit = document.getElementById("edit");
+        butt_edit.addEventListener("click", editFriend, false);
+
+        function editFriend() {
+            var data = [];
+            $.ajax({
+                type: "GET",
+                url: "http://127.0.0.1:8000/show",
+                dataType: "json",
+                async: false,
+                success: function(result) {
+                    console.log(result["list"]);
+                    data = result["list"];
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+            console.log(data);
+            var mapto = new Map();
+            for (var a = 0; a < data.length; a++) {
+                mapto.set((a + 1), data[a]["name"]);
+            }
+            console.log(mapto);
+            Swal.fire({
+                title: 'chooes which one you want to edit',
+                input: 'select',
+                inputOptions: mapto,
+                inputPlaceholder: 'please choose person',
+                showCancelButton: true,
+            }).then((result) => {
+                console.log(result)
+                if (result.value) {
+                    var listl = data[result.value - 1];
+                    console.log(result);
+                    Swal.mixin({
+                        input: 'text',
+                        confirmButtonText: 'Next &rarr;',
+                        showCancelButton: true,
+                        progressSteps: ['1', '2', '3', '4', '5']
+                    }).queue([{
+                        title: 'name',
+                        text: listl["name"]
+                    }, {
+                        title: 'phone',
+                        text: listl["phone"]
+                    }, {
+                        title: 'city',
+                        text: listl["city"]
+                    }, {
+                        title: 'address',
+                        text: listl["addr"]
+                    }, {
+                        title: 'e-mail',
+                        text: listl["mail"]
+                    }]).then((result) => {
+                        if (result.value) {
+                            console.log(result)
+                            const answers = result.value;
+                            if (answers[0] != "") {
+                                console.log(answers[0])
+                                listl["name"] = answers[0]
+                            }
+                            if (answers[1] != "") {
+                                listl["phone"] = answers[1]
+                            }
+                            if (answers[2] != "") {
+                                listl["city"] = answers[2]
+                            }
+                            if (answers[3] != "") {
+                                listl["addr"] = answers[3]
+                            }
+                            if (answers[4] != "") {
+                                listl["mail"] = answers[4]
+                            }
+                            listl["ID"] = listl["id"];
+                            console.log(listl);
+                            postRequest(listl);
+                        }
+                    });
+                }
+
+            })
+        }
+
+        function postRequest(data) {
+            $.ajax({
+                type: "POST",
+                url: "http://127.0.0.1:8000/edit",
+                dataType: "json",
+                data: JSON.stringify(data),
+                async: true,
+                success: function() {
+                    var address = data["city"];
+                    var title = data["name"];
+                    var content = [];
+                    content.push("e-mail : " + data["mail"]);
+                    content.push("Phone : " + data["phone"]);
+                    content.push("Address : " + data["addr"]);
+                    geo(address, title, content);
+                    Swal.fire('Good job!',
+                        'You have changed information!',
+                        'success');
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+
+        }
+
+        var search_butt = document.getElementById("searchbutt");
+        search_butt.addEventListener("click", searchFriend, false);
+
+        function searchFriend() {
+            var option = document.getElementById('options').value;
+            var content = document.getElementById("search").value;
+            var data = {};
+            data["area"] = option;
+            data["search"] = content;
+
+            $.ajax({
+                type: "GET",
+                url: "http://127.0.0.1:8000/search",
+                dataType: "json",
+                async: true,
+                data: data,
+                success: function(result) {
+                    var finddata = result;
+                    console.log(result["list"]);
+                    if (result["list"].length != 0) {
+                        var names = "";
+                        for (var s = 0; s < result["list"].length; s++) {
+                            names = names + result["list"][s]["name"] + " ";
+                        }
+                        Swal.fire(
+                            'Do you want to display on map?',
+                            'find: ' + names,
+                            'question'
+
+                        ).then((result) => {
+                            if (result.value) {
+                                map.remove(markers_w);
+                                displayMarker(finddata);
+                            }
+                        })
+                    } else {
+                        Swal.fire(
+                            'find nothing',
+                            'Please try again!',
+                            'error'
+                        )
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+        }
+
+        var dele_butt = document.getElementById("delete");
+        dele_butt.addEventListener("click", deleteFriend, false);
+
+        function deleteFriend() {
+            var data = [];
+            $.ajax({
+                type: "GET",
+                url: "http://127.0.0.1:8000/show",
+                dataType: "json",
+                async: false,
+                success: function(result) {
+                    console.log(result["list"]);
+                    data = result["list"];
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+            console.log(data);
+            var mapto = new Map();
+            for (var a = 0; a < data.length; a++) {
+                mapto.set((a + 1), data[a]["name"]);
+            }
+            console.log(mapto);
+            Swal.fire({
+                title: 'chooes which one you want to edit',
+                input: 'select',
+                inputOptions: mapto,
+                inputPlaceholder: 'please choose person',
+                showCancelButton: true,
+            }).then((result) => {
+                console.log(result)
+                var index = new Number(result["value"]);
+                var senddata = {};
+                senddata["ID"] = data[index - 1]["id"];
+                const swalWithBootstrapButtons = Swal.mixin({
+                    customClass: {
+                        confirmButton: 'btn btn-success',
+                        cancelButton: 'btn btn-danger'
+                    },
+                    buttonsStyling: false
+                });
+
+                swalWithBootstrapButtons.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'No, cancel!',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.value) {
+                        deleInterface(senddata)
+                    } else if (
+                        /* Read more about handling dismissals below */
+                        result.dismiss === Swal.DismissReason.cancel
+                    ) {
+                        swalWithBootstrapButtons.fire(
+                            'Cancelled',
+                            'Your imaginary file is safe :)',
+                            'error'
+                        )
+                    }
+                })
+            });
+
+
+        }
+
+        function deleInterface(data) {
+            $.ajax({
+                type: "GET",
+                url: "http://127.0.0.1:8000/delete",
+                dataType: "json",
+                async: false,
+                data: data,
+                success: function(result) {
+                    Swal.fire('OK!', 'you have deleted successfully', 'success');
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.status)
+                    alert(XMLHttpRequest.readyState)
+                    alert(textStatus)
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>-->
